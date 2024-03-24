@@ -71,8 +71,22 @@ public class CommandController : ICommandController
         commandBuilder.WithName(command.Name);
         commandBuilder.WithDescription(command.Description);
         foreach (IOption option in command.Options)
-            commandBuilder.AddOption(option.Name, option.OptionType, option.Description, option.IsRequired);
+            commandBuilder.AddOption(CreateOption(option));
 
         client.TryCreateGlobalCommand(commandBuilder.Build());
+    }
+
+    private static SlashCommandOptionBuilder CreateOption(IOption option)
+    {
+        SlashCommandOptionBuilder optionBuilder = new SlashCommandOptionBuilder()
+            .WithName(option.Name)
+            .WithType(option.OptionType)
+            .WithDescription(option.Description)
+            .WithRequired(option.IsRequired);
+
+        foreach (string choice in option.Choices)
+            optionBuilder.AddChoice(choice, choice);
+
+        return optionBuilder;
     }
 }

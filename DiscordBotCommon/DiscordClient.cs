@@ -65,15 +65,6 @@ public class DiscordClient : IDiscordClient
 
     public void TryCreateGlobalCommand(SlashCommandProperties slashCommandProperties)
     {
-        Console.WriteLine("Trying to create command..");
-
-        var commands = client.GetGlobalApplicationCommandsAsync().Result;
-        if (commands.Any(c => c.Name == slashCommandProperties.Name.Value))
-        {
-            Console.WriteLine($"{slashCommandProperties.Name.Value} already added");
-            return;
-        }
-
         try
         {
             var result = client.CreateGlobalApplicationCommandAsync(slashCommandProperties).Result;

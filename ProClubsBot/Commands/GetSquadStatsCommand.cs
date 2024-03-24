@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using DiscordBotCommon;
 using ProClubsBot.Models;
+using System.Reflection;
 
 namespace ProClubsBot.Commands;
 
@@ -20,7 +21,7 @@ internal class GetSquadStatsCommand : ICommand
 
     public CommandType CommandType => CommandType.Global;
 
-    public IList<IOption> Options => new List<IOption>();
+    public IList<IOption> Options => new List<IOption> { new GetSquadStatsOrderByCommandOption() };
 
     public bool IsRegistered { get; set; }
 
@@ -32,12 +33,33 @@ internal class GetSquadStatsCommand : ICommand
             socketSlashCommand.RespondAsync("Could not find squad");
             return;
         }
-        
-        ConsoleTable table = new("Name", "Apps", "Avg", "Goals", "Shot (%)", "Assists", "Passes", "Pass (%)", "Tackles", "Tackle (%)", "Reds");
-        foreach (Player p in squad.Players)
-            table.AddRow(p.Name, p.Appearances, p.AverageRating, p.Goals, p.ShotSuccessRate, p.Assists, p.Passes, p.PassSuccessRate, p.Tackles, p.TackleSuccessRate, p.RedCards);
 
-        string tableString = table.ToMinimalString();
-        socketSlashCommand.RespondAsync($"`{tableString}`");
+        List<Player> players = squad.Players;
+
+        if (socketSlashCommand.Data.Options.FirstOrDefault()?.Value is string value &&
+            typeof(Player).GetProperty(value) is PropertyInfo propertyInfo)
+        {
+            players = players.OrderByDescending(p => propertyInfo.GetValue(p, null)).ToList();
+        }
+
+        string[] columnHeaders = GetPropertiesWithNameAttribute<Player>()
+            .Select(prop => prop.GetCustomAttribute<NameAttribute>().Name)
+            .Where(n => n is not null)
+            .ToArray();
+
+        ConsoleTable table = new(columnHeaders);
+        foreach (Player p in players)
+        {
+            table.AddRow(
+                GetPropertiesWithNameAttribute<Player>()
+                .Select(prop => prop.GetValue(p, null))
+                .Where(v => v is not null)
+                .ToArray());
+        }
+
+        socketSlashCommand.RespondAsync(table.ToMinimalString().ToCodeBlockString());
     }
+
+    private IEnumerable<PropertyInfo> GetPropertiesWithNameAttribute<T>() =>
+        typeof(T).GetProperties().Where(prop => prop.GetCustomAttribute<NameAttribute>() is not null);
 }

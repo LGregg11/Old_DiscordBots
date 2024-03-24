@@ -15,7 +15,7 @@ namespace ProClubsBot.Commands
 
         public CommandType CommandType => CommandType.Global;
 
-        public IList<IOption> Options => new List<IOption>(); // { new HelloWorldCommandOption() };
+        public IList<IOption> Options => new List<IOption>();
 
         public bool IsRegistered { get; set; }
 

@@ -33,18 +33,17 @@ internal class GetSquadStatsPerGameCommand : ICommand
             return;
         }
 
-        ConsoleTable table = new("Name", "Apps", "Rating", "Goals", "Assists", "Passes", "Tackles");
+        ConsoleTable table = new("Name", "Apps", "Rating", "Goals", "Assists", "Involvements", "Passes", "Tackles");
         foreach (Player p in squad.Players)
         {
             float apps = p.Appearances * 1.0f;
 
             table.AddRow(p.Name, p.Appearances, p.AverageRating,
-                ToTwoDPString(p.Goals / apps), ToTwoDPString(p.Assists / apps),
+                ToTwoDPString(p.Goals / apps), ToTwoDPString(p.Assists / apps), ToTwoDPString(p.GoalInvolvements / apps),
                 ToTwoDPString(p.Passes / apps), ToTwoDPString(p.Tackles / apps));
         }
 
-        string tableString = table.ToMinimalString();
-        socketSlashCommand.RespondAsync($"`{tableString}`");
+        socketSlashCommand.RespondAsync(table.ToMinimalString().ToCodeBlockString());
     }
 
     private static string ToTwoDPString(float number) => $"{number:F2}";
